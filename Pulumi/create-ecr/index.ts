@@ -1,8 +1,8 @@
 import * as aws from "@pulumi/aws";
 
-// Create an ECR Repository named 'ang-l-fw'
+// Create an ECR Repository named 'ang-l-fw-be'
 const repository = new aws.ecr.Repository("ang", {
-    name: "ang-l-fw",
+    name: "ang-l-fw-be",
     imageScanningConfiguration: {
         scanOnPush: true,
     },
