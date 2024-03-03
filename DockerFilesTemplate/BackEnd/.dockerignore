@@ -1,0 +1,13 @@
+.dockerignore
+Dockerfile
+Dockerfile.dev
+.nvmrc
+dist
+node_modules
+pnpm-lock.yaml
+.gitignore
+Makefile
+*.sh
+*.md
+k8s/**/*
+k8s/**/*.yaml

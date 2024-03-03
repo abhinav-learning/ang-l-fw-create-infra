@@ -1,0 +1,14 @@
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+README.md
+.next
+.git
+.nvmrc
+.gitignore
+Makefile
+*.sh
+*.md
+k8s/**/*
+k8s/**/*.yaml
