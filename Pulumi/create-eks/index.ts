@@ -1,4 +1,3 @@
-import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import * as eks from "@pulumi/eks";
 import * as awsx from "@pulumi/awsx";
@@ -78,18 +77,3 @@ const rolePolicyAttachment = new aws.iam.RolePolicyAttachment("ang-l-fw-ecrPolic
     policyArn: ecrPolicy.arn,
     role: cluster.instanceRoles[0].name,
 });
-
-// Create a new AWS Secrets Manager secret to store the kubeconfig.
-const kubeconfigSecret = new aws.secretsmanager.Secret("ang-l-fw-kubeconfig-secret", {
-    description: "Kubeconfig for ang-l-fw-eks-cluster cluster",
-});
-
-// Create a new secret version with the kubeconfig from the EKS cluster.
-const kubeconfigSecretVersion = new aws.secretsmanager.SecretVersion("ang-l-fw-kubeconfig-secret-version", {
-    secretId: kubeconfigSecret.id,
-    secretString: pulumi.secret(cluster.kubeconfig.apply(JSON.stringify)),
-});
-
-// Export the Secret ID and ARN
-export const secretId = kubeconfigSecret.id;
-export const secretArn = kubeconfigSecret.arn;
