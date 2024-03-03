@@ -1,6 +1,6 @@
 name: create-eks
 runtime: nodejs
-description: A Pulumi Script to Create the EKS Cluster
+description: A Pulumi Script to provision the EKS Cluster
 config:
   pulumi:tags:
     value:

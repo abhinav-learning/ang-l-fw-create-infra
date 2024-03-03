@@ -1,9 +1,71 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import * as eks from "@pulumi/eks";
 import * as awsx from "@pulumi/awsx";
 
-// Create an AWS resource (S3 Bucket)
-const bucket = new aws.s3.Bucket("my-bucket");
+// Create a new VPC for our cluster.
+const vpc = new awsx.ec2.Vpc("ang-l-fw-vpc", {
+    numberOfAvailabilityZones: 2, // Ensures we have subnets in at least two AZs for high availability
+});
 
-// Export the name of the bucket
-export const bucketName = bucket.id;
+// Create an EKS cluster with the desired configuration
+const cluster = new eks.Cluster("ang-l-fw-eks-cluster", {
+    vpcId: vpc.vpcId,
+    privateSubnetIds: vpc.privateSubnetIds,
+    publicSubnetIds: vpc.publicSubnetIds,
+    desiredCapacity: 1,
+    minSize: 1,
+    maxSize: 1,
+    instanceType: "t2.medium",
+});
+
+// Define an IAM policy for ECR access
+const ecrPolicy = new aws.iam.Policy("ang-l-fw-ecrPolicy", {
+    description: "Allows EKS worker nodes to interact with ECR",
+    policy: {
+        Version: "2012-10-17",
+        Statement: [
+            {
+                Action: [
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage",
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:PutImage",
+                    "ecr:InitiateLayerUpload",
+                    "ecr:UploadLayerPart",
+                    "ecr:CompleteLayerUpload",
+                    "ecr:DescribeRepositories",
+                    "ecr:GetRepositoryPolicy",
+                    "ecr:ListImages",
+                    "ecr:DeleteRepository",
+                    "ecr:BatchDeleteImage",
+                    "ecr:SetRepositoryPolicy",
+                    "ecr:DeleteRepositoryPolicy"
+                ],
+                Effect: "Allow",
+                Resource: "*"
+            }
+        ],
+    },
+});
+
+// Attach the ECR policy to the worker node IAM role
+const rolePolicyAttachment = new aws.iam.RolePolicyAttachment("ang-l-fw-ecrPolicy-ecrPolicyAttachment", {
+    policyArn: ecrPolicy.arn,
+    role: cluster.instanceRoles[0].name,
+});
+
+// Create a new AWS Secrets Manager secret to store the kubeconfig.
+const kubeconfigSecret = new aws.secretsmanager.Secret("ang-l-fw-kubeconfig-secret", {
+    description: "Kubeconfig for ang-l-fw-eks-cluster cluster",
+});
+
+// Create a new secret version with the kubeconfig from the EKS cluster.
+const kubeconfigSecretVersion = new aws.secretsmanager.SecretVersion("ang-l-fw-kubeconfig-secret-version", {
+    secretId: kubeconfigSecret.id,
+    secretString: pulumi.secret(cluster.kubeconfig.apply(JSON.stringify)),
+});
+
+// Export the Secret ID and ARN
+export const secretId = kubeconfigSecret.id;
+export const secretArn = kubeconfigSecret.arn;
