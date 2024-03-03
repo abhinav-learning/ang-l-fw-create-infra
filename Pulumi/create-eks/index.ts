@@ -19,6 +19,30 @@ const cluster = new eks.Cluster("ang-l-fw-eks-cluster", {
     instanceType: "t2.medium",
 });
 
+// Install CoreDNS add-on
+const coredns = new aws.eks.Addon("coredns", {
+    clusterName: cluster.eksCluster.name,
+    addonName: "coredns",
+    addonVersion: "v1.11.1-eksbuild.4", // Specify the appropriate version for your cluster
+    resolveConflicts: "OVERWRITE",
+});
+
+// Install kube-proxy add-on
+const kubeProxy = new aws.eks.Addon("kube-proxy", {
+    clusterName: cluster.eksCluster.name,
+    addonName: "kube-proxy",
+    addonVersion: "v1.29.0-eksbuild.1", // Specify the appropriate version for your cluster
+    resolveConflicts: "OVERWRITE",
+});
+
+// Install AWS VPC CNI add-on
+const awsVpcCni = new aws.eks.Addon("vpc-cni", {
+    clusterName: cluster.eksCluster.name,
+    addonName: "vpc-cni",
+    addonVersion: "v1.16.0-eksbuild.1", // Specify the appropriate version for your cluster
+    resolveConflicts: "OVERWRITE",
+});
+
 // Define an IAM policy for ECR access
 const ecrPolicy = new aws.iam.Policy("ang-l-fw-ecrPolicy", {
     description: "Allows EKS worker nodes to interact with ECR",
