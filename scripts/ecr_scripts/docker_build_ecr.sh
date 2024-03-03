@@ -17,9 +17,3 @@ else
   echo "Error: Failed to get the last commit SHA"
   exit 1
 fi
-
-
-
-
-docker push 471112869603.dkr.ecr.ap-south-1.amazonaws.com/ang-l-fw:latest
-docker push 471112869603.dkr.ecr.ap-south-1.amazonaws.com/ang-l-fw:095d19d
