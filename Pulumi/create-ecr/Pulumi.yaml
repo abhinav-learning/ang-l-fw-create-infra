@@ -1,7 +1,7 @@
-name: create-infra
+name: create-ecr
 runtime: nodejs
-description: A minimal AWS TypeScript Pulumi program
+description: Pulumi Project to Provision the AWS ECR.
 config:
   pulumi:tags:
     value:
-      pulumi:template: ""
+      pulumi:template: aws-typescript
