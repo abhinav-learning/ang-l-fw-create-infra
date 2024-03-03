@@ -1,4 +1,8 @@
-bases:
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
   - ../../application
-patchesStrategicMerge:
-  - ./patch.yaml
+
+replicas:
+  - name: ang-l-fw-be
+    count: 3
