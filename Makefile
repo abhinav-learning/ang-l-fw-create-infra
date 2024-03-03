@@ -1,6 +1,6 @@
 SHELL := /bin/bash  # Specify bash as the shell for commands
 
-.PHONY: docker_build docker_push create_cluster create_ns deploy remove remove_ns delete_cluster
+.PHONY: docker_build docker_push create_cluster create_ns deploy remove remove_ns delete_cluster kustomize_dev kustomize_prod
 
 docker_build:
 	./scripts/docker_build.sh
@@ -25,4 +25,10 @@ remove_ns:
 
 delete_cluster:
 	./scripts/delete_cluster.sh
+
+kustomize_dev:
+	./scripts/kustomize_dev.sh
+
+kustomize_prod:
+	./scripts/kustomize_prod.sh
 
