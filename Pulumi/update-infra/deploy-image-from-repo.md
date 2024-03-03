@@ -1,3 +1,0 @@
-In this program, aws.secretsmanager.getSecret is used to fetch the secret containing the kubeconfig for the EKS cluster. The kubeconfig is then used to create a kubernetes.Provider. For the Kubernetes manifest files stored on GitHub, the program defines a manifestFilenames array containing file paths to the manifest files. It uses kubernetes.yaml.ConfigGroup to fetch and apply each manifest file to the EKS cluster.
-
-Please ensure that you have the necessary permissions to access the AWS secrets and the GitHub repository. Also, adjust secretName, gitHubRepoUrl, and the manifest filenames to match your actual AWS secret and repository details.
