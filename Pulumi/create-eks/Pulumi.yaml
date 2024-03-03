@@ -1,7 +1,7 @@
-name: create-infra
+name: create-eks
 runtime: nodejs
-description: A minimal AWS TypeScript Pulumi program
+description: A Pulumi Script to Create the EKS Cluster
 config:
   pulumi:tags:
     value:
-      pulumi:template: ""
+      pulumi:template: aws-typescript
