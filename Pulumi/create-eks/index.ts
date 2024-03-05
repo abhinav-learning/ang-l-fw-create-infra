@@ -1,93 +1,45 @@
-import * as aws from "@pulumi/aws";
-import * as eks from "@pulumi/eks";
-import * as awsx from "@pulumi/awsx";
+import * as eks from "@pulumi/eks"
+import * as aws from "@pulumi/aws"
+import {createVpc} from "./vpc";
 
-// Create a new VPC for our cluster.
-const vpc = new awsx.ec2.Vpc("ang-l-fw-vpc", {
-    numberOfAvailabilityZones: 2, // Ensures we have subnets in at least two AZs for high availability
-});
+const name = "ang-eks-vpc";
+const tags = { "Project": "ang-webapp", "Owner": "ang-eks"};
 
-// Define an IAM policy for ECR access
-const ecrPolicy = new aws.iam.Policy("ang-l-fw-ecrPolicy", {
-    description: "Allows EKS worker nodes to interact with ECR",
-    policy: {
-        Version: "2012-10-17",
-        Statement: [
-            {
-                Action: [
-                    "ecr:GetDownloadUrlForLayer",
-                    "ecr:BatchGetImage",
-                    "ecr:BatchCheckLayerAvailability",
-                    "ecr:PutImage",
-                    "ecr:InitiateLayerUpload",
-                    "ecr:UploadLayerPart",
-                    "ecr:CompleteLayerUpload",
-                    "ecr:DescribeRepositories",
-                    "ecr:GetRepositoryPolicy",
-                    "ecr:ListImages",
-                    "ecr:DeleteRepository",
-                    "ecr:BatchDeleteImage",
-                    "ecr:SetRepositoryPolicy",
-                    "ecr:DeleteRepositoryPolicy"
-                ],
-                Effect: "Allow",
-                Resource: "*"
-            }
-        ],
-    },
-});
+// Create a VPC with public & private subnets across all AZs.
+const vpc = createVpc({name, tags});
 
-// Create an IAM role with AmazonEKSClusterPolicy attached
-const eksRole = new aws.iam.Role("eksRole", {
-    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-        Service: "eks.amazonaws.com",
-    }),
-});
-
-// Attach the AmazonEKSClusterPolicy to the role
-const eksPolicyAttachment = new aws.iam.RolePolicyAttachment("eksPolicyAttachment", {
-    role: eksRole,
-    policyArn: "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
-});
-
-// Attach the ECR policy to the worker node IAM role
-const rolePolicyAttachment = new aws.iam.RolePolicyAttachment("ang-l-fw-ecrPolicy-ecrPolicyAttachment", {
-    policyArn: ecrPolicy.arn,
-    role: eksRole,
-});
-
-// Create an EKS cluster with the desired configuration
-const cluster = new eks.Cluster("ang-l-fw-eks-cluster", {
+// Create an EKS cluster with the default VPC, and default node group with 
+// two t2.medium node instances.
+const cluster = new eks.Cluster("ang-eks", {
+    name: "ang-eks-cluster",
     vpcId: vpc.vpcId,
-    privateSubnetIds: vpc.privateSubnetIds,
     publicSubnetIds: vpc.publicSubnetIds,
-    desiredCapacity: 1,
-    minSize: 1,
-    maxSize: 1,
-    instanceType: "t2.medium",
-    serviceRole: eksRole,
+    privateSubnetIds: vpc.privateSubnetIds,
+    deployDashboard: false,
+    nodeAssociatePublicIpAddress: false,
+    tags,
 });
 
-// Install CoreDNS add-on
-const coredns = new aws.eks.Addon("coredns", {
+// Define the CoreDNS add-on
+const corednsAddon = new aws.eks.Addon("coredns-addon", {
     clusterName: cluster.eksCluster.name,
     addonName: "coredns",
-    addonVersion: "v1.11.1-eksbuild.4", // Specify the appropriate version for your cluster
-    resolveConflicts: "OVERWRITE",
+    addonVersion: "v1.11.1-eksbuild.4", // Specify the version you want to use
 });
 
-// Install kube-proxy add-on
-const kubeProxy = new aws.eks.Addon("kube-proxy", {
+// Define the kube-proxy add-on
+const kubeProxyAddon = new aws.eks.Addon("kube-proxy-addon", {
     clusterName: cluster.eksCluster.name,
     addonName: "kube-proxy",
-    addonVersion: "v1.29.0-eksbuild.1", // Specify the appropriate version for your cluster
-    resolveConflicts: "OVERWRITE",
+    addonVersion: "v1.29.0-eksbuild.1", // Specify the version you want to use
 });
 
-// Install AWS VPC CNI add-on
-const awsVpcCni = new aws.eks.Addon("vpc-cni", {
+// Define the Amazon VPC CNI add-on
+const vpcCniAddon = new aws.eks.Addon("vpc-cni-addon", {
     clusterName: cluster.eksCluster.name,
     addonName: "vpc-cni",
-    addonVersion: "v1.16.0-eksbuild.1", // Specify the appropriate version for your cluster
-    resolveConflicts: "OVERWRITE",
+    addonVersion: "v1.16.0-eksbuild.1", // Specify the version you want to use
 });
+
+
+export const kubeconfig = cluster.kubeconfig;
