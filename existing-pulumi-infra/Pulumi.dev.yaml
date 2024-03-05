@@ -1,0 +1,7 @@
+config:
+  aws:region: ap-south-1
+  eks-102:desiredClusterSize: "3"
+  eks-102:eksNodeInstanceType: t3.medium
+  eks-102:maxClusterSize: "6"
+  eks-102:minClusterSize: "3"
+  eks-102:vpcNetworkCidr: 10.0.0.0/16
